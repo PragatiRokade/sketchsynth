@@ -1,0 +1,206 @@
+:root {
+    --bg-dark: #050505;
+    --bg-panel: #111111;
+    --bg-element: #1a1a1a;
+    --text-main: #e0e0e0;
+    --neon-blue: #00FFFF;
+    --neon-pink: #FF0099;
+    --border-color: #333;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    margin: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+.main-container {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+}
+
+/* --- Side Panels --- */
+.side-panel {
+    width: 280px;
+    background-color: var(--bg-panel);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    z-index: 10;
+    height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.left-panel { border-right: 1px solid var(--border-color); }
+.right-panel { border-left: 1px solid var(--border-color); }
+
+.neon-text {
+    color: #fff;
+    text-shadow: 0 0 5px #fff, 0 0 10px var(--neon-blue);
+    text-align: center;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.control-group {
+    background-color: var(--bg-element);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    flex-shrink: 0;
+}
+
+.control-group h3 {
+    color: var(--neon-blue);
+    margin-top: 0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+/* --- Buttons --- */
+.btn-row { display: flex; gap: 10px; }
+
+.tool-btn, .action-btn {
+    width: 100%;
+    padding: 10px;
+    background: #222;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.1s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.tool-btn.half { width: 50%; justify-content: center; }
+
+.tool-btn:hover {
+    background: #333;
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 4px var(--neon-blue);
+}
+
+.tool-btn.active {
+    background: var(--neon-blue);
+    color: #000;
+    font-weight: bold;
+    box-shadow: 0 0 8px var(--neon-blue);
+    border-color: var(--neon-blue);
+}
+
+.action-btn:hover {
+    background: #300;
+    border-color: var(--neon-pink);
+    box-shadow: 0 0 4px var(--neon-pink);
+}
+
+/* --- Palette --- */
+.color-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.color-swatch {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #222;
+    transition: transform 0.2s;
+    box-shadow: 0 0 2px rgba(0,0,0,0.3);
+}
+.color-swatch:hover { transform: scale(1.1); }
+.color-swatch.active { border: 2px solid white; transform: scale(1.15); }
+
+input[type="range"] {
+    width: 100%;
+    accent-color: var(--neon-blue);
+    height: 4px;
+    background: #444;
+    border-radius: 5px;
+    outline: none;
+}
+
+/* --- Canvas Area --- */
+.canvas-container {
+    flex: 1;
+    position: relative;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* CRITICAL FIX: REMOVED OVERFLOW HIDDEN SO GLOW CAN BE SEEN */
+}
+
+canvas {
+    background-color: #000;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.05);
+    border: 2px solid #333;
+    cursor: crosshair;
+    /* Allows transition for smooth pulsing */
+    transition: box-shadow 0.05s, border-color 0.05s; 
+}
+
+/* --- VISUALIZER ANIMATIONS --- */
+@keyframes pulse-kick {
+    0% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.05); border-color: #333; }
+    20% { box-shadow: 0 0 80px rgba(255, 255, 255, 0.9); border-color: #FFF; } /* BRIGHT FLASH */
+    100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.05); border-color: #333; }
+}
+
+@keyframes pulse-snare {
+    0% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.05); border-color: #333; }
+    20% { box-shadow: 0 0 60px rgba(0, 255, 255, 0.8); border-color: #0FF; } /* CYAN FLASH */
+    100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.05); border-color: #333; }
+}
+
+.pulse-kick {
+    animation: pulse-kick 0.15s ease-out;
+}
+
+.pulse-snare {
+    animation: pulse-snare 0.1s ease-out;
+}
+
+/* Recording State */
+.recording {
+    background-color: #300 !important;
+    border-color: red !important;
+    box-shadow: 0 0 10px red !important;
+    color: white !important;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; }
+}
+
+.status-text {
+    color: #666;
+    font-size: 0.8rem;
+    text-align: center;
+    margin-top: auto;
+    padding-top: 10px;
+}
