@@ -41,8 +41,8 @@
              <div class="control-group">
                 <h3><i class="fa-solid fa-rotate-left"></i> History</h3>
                 <div class="btn-row">
-                    <button id="undoBtn" class="tool-btn half"><i class="fa-solid fa-undo"></i> Undo</button>
-                    <button id="redoBtn" class="tool-btn half"><i class="fa-solid fa-redo"></i> Redo</button>
+                    <button id="undoBtn" class="tool-btn half" disabled><i class="fa-solid fa-undo"></i> Undo</button>
+                    <button id="redoBtn" class="tool-btn half" disabled><i class="fa-solid fa-redo"></i> Redo</button>
                 </div>
             </div>
         </div>
@@ -55,9 +55,9 @@
             <h2 class="neon-text">Synth</h2>
 
             <div class="control-group">
-                <h3><i class="fa-solid fa-robot"></i> Detection</h3>
-                <div id="statusMessage" class="status-text" style="color: #00FFFF;">Ready to Draw</div>
-                <div id="beatStatus" class="status-text" style="margin-top: 5px; font-size: 0.7rem; color: #666;">No Beats Active</div>
+                <h3><i class="fa-solid fa-robot"></i> AI Status</h3>
+                <div id="aiStatus" class="status-text" style="color: #FF0099; font-weight: bold;">System Ready</div>
+                <div id="beatStatus" class="status-text" style="margin-top: 5px; font-size: 0.7rem;">No Beats Active</div>
             </div>
 
             <div class="control-group">
@@ -75,7 +75,10 @@
                 <h3><i class="fa-solid fa-microphone"></i> Studio</h3>
                 <div class="btn-row">
                     <button id="recordBtn" class="tool-btn" style="color: #ff4444; border-color: #ff4444;"><i class="fa-solid fa-circle"></i> Rec</button>
-                    <button id="downloadBtn" class="tool-btn" disabled><i class="fa-solid fa-download"></i> Save</button>
+                    <button id="shareBtn" class="tool-btn"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                </div>
+                 <div class="btn-row" style="margin-top: 10px;">
+                    <button id="downloadBtn" class="tool-btn" disabled><i class="fa-solid fa-download"></i> Save Audio</button>
                 </div>
             </div>
 
@@ -84,6 +87,8 @@
                 <button id="stopBeatsBtn" class="action-btn" style="margin-bottom: 10px; border-color: #00FFFF; color:#00FFFF;"><i class="fa-solid fa-stop"></i> Stop Beats</button>
                 <button id="clearBtn" class="action-btn"><i class="fa-solid fa-trash"></i> Wipe System</button>
             </div>
+            
+            <div id="statusMessage" class="status-text">System Ready</div>
         </div>
     </div>
     <script src="sketch.js"></script>

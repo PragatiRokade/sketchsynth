@@ -1,4 +1,3 @@
-
 window.addEventListener('load', () => {
     const canvas = document.getElementById('drawingCanvas');
     const ctx = canvas.getContext('2d');
@@ -15,11 +14,15 @@ window.addEventListener('load', () => {
     const stopBeatsBtn = document.getElementById('stopBeatsBtn');
     const recordBtn = document.getElementById('recordBtn');
     const downloadBtn = document.getElementById('downloadBtn');
+    const shareBtn = document.getElementById('shareBtn');
     const brushSlider = document.getElementById('brushSize');
     const bpmSlider = document.getElementById('bpmSlider');
     const bpmLabel = document.getElementById('bpmLabel');
     const echoToggle = document.getElementById('echoToggle');
     const colorSwatches = document.querySelectorAll('.color-swatch');
+
+    // --- CONFIG ---
+    const API_BASE_URL = 'http://localhost:8000'; // Change this to your deployed FastAPI/Render URL
 
     // --- STATE ---
     let isDrawing = false;
@@ -31,6 +34,11 @@ window.addEventListener('load', () => {
     let rawStrokes = []; 
     let detectedObjects = []; // Stores: { type, x, y, color, scale }
     let currentStroke = { x: [], y: [], color: '#FFFFFF' };
+
+    // --- HISTORY STATE ---
+    let history = []; // Stores past states of detectedObjects
+    let redoStack = []; // Stores states undone for re-applying
+    const MAX_HISTORY = 20; // Limit history size
 
     // --- AUDIO STATE ---
     let audioCtx = null;
@@ -67,6 +75,129 @@ window.addEventListener('load', () => {
         const index = Math.floor((1 - yPercent) * SCALE_FREQS.length);
         const safeIndex = Math.max(0, Math.min(index, SCALE_FREQS.length - 1));
         return SCALE_FREQS[safeIndex];
+    }
+    
+    // --- STATE COLLECTION FUNCTION ---
+    function getCurrentArrangementState() {
+        return {
+            detectedObjects: detectedObjects,
+            bpm: currentBPM,
+            echoActive: echoActive,
+        };
+    }
+
+    // --- API INTEGRATION: SAVE ---
+    async function saveArrangement() {
+        statusMsg.innerText = "Connecting to SynthNet server...";
+        
+        const state = getCurrentArrangementState();
+
+        // --- Simulated API Call (Replace with actual fetch to your FastAPI /save endpoint) ---
+        /*
+        const response = await fetch(`${API_BASE_URL}/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(state)
+        });
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+        */
+
+        // Placeholder simulation:
+        return new Promise(resolve => {
+            setTimeout(() => {
+                const uniqueId = Math.random().toString(36).substring(2, 8).toUpperCase();
+                resolve({ success: true, shareId: uniqueId });
+            }, 1000); // Simulate 1 second network delay
+        });
+    }
+    
+    // --- API INTEGRATION: LOAD ---
+    async function loadArrangement(shareId) {
+        aiStatus.innerText = "Connecting to SynthNet...";
+        statusMsg.innerText = `Loading arrangement ID: ${shareId}`;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/load/${shareId}`);
+
+            if (!response.ok) {
+                // This will fail if the backend isn't running or the ID doesn't exist
+                throw new Error(`Failed to load arrangement: Status ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            // 1. Load Data
+            detectedObjects = data.detectedObjects || [];
+            currentBPM = data.bpm || 120;
+            echoActive = data.echoActive || false;
+            
+            // 2. Update UI/Audio State
+            bpmSlider.value = currentBPM;
+            bpmLabel.innerText = currentBPM;
+            echoToggle.checked = echoActive;
+            
+            if (audioCtx) {
+                startBeatLoop();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            }
+            
+            // 3. Recalculate beats and history
+            updateBeatStatus();
+            history = []; 
+            redoStack = []; 
+            saveState(); // Save the newly loaded state as the first history item
+            
+            aiStatus.innerText = "LOAD SUCCESS";
+            statusMsg.innerText = `Arrangement loaded for BPM ${currentBPM}`;
+
+        } catch (error) {
+            aiStatus.innerText = "LOAD FAILED";
+            statusMsg.innerText = `Error: ${error.message}. Starting blank session.`;
+            // Ensure a blank session is started if loading fails
+            detectedObjects = [];
+            updateBeatStatus();
+            saveState();
+        }
+    }
+
+
+    // --- HISTORY MANAGEMENT FUNCTIONS ---
+    function saveState() {
+        // Clear the redo stack whenever a new action is performed
+        redoStack = []; 
+        
+        // Push a DEEP copy of the current objects array to history
+        history.push(JSON.stringify(detectedObjects)); 
+        
+        // Maintain history limit
+        if (history.length > MAX_HISTORY) {
+            history.shift(); // Remove oldest state
+        }
+        
+        // Update button states
+        redoBtn.disabled = true;
+        undoBtn.disabled = history.length <= 1;
+    }
+
+    function loadState(stateJson) {
+        if (!stateJson) return;
+        
+        // Update the main state array with the loaded state
+        detectedObjects = JSON.parse(stateJson);
+        
+        // Re-calculate active beats based on the loaded state
+        activeBeats = { kick: false, snare: false, hihat: false };
+        detectedObjects.forEach(obj => {
+            if (obj.type === 'drum' || obj.type === 'bass') activeBeats.kick = true;
+            if (obj.type === 'cello') activeBeats.snare = true;
+            if (obj.type === 'flute') activeBeats.hihat = true;
+        });
+        updateBeatStatus();
+        
+        // Update button states
+        undoBtn.disabled = history.length <= 1;
+        redoBtn.disabled = redoStack.length === 0;
     }
 
     // --- 1. AUDIO ENGINE ---
@@ -146,21 +277,10 @@ window.addEventListener('load', () => {
         }
     }
 
-    // --- 3. SHAPE DETECTION & TRANSFORMATION ---
+    // --- 3. SHAPE DETECTION (Enhanced Logic) ---
     function classifyShape(stroke) {
         const points = stroke.x.map((x, i) => ({ x, y: stroke.y[i] }));
         if (points.length < 10) return 'dot';
-
-        const start = points[0];
-        const end = points[points.length - 1];
-        
-        let pathLen = 0;
-        for(let i=1; i<points.length; i++) {
-            pathLen += Math.hypot(points[i].x - points[i-1].x, points[i].y - points[i-1].y);
-        }
-        const distance = Math.hypot(end.x - start.x, end.y - start.y);
-
-        if (distance > pathLen * 0.85) return 'line'; 
 
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         points.forEach(p => {
@@ -169,12 +289,33 @@ window.addEventListener('load', () => {
         });
         const width = maxX - minX;
         const height = maxY - minY;
+        const start = points[0];
+        const end = points[points.length - 1];
+
+        // 1. Line Check: If start/end distance is close to the total path length
+        let pathLen = 0;
+        for(let i=1; i<points.length; i++) {
+            pathLen += Math.hypot(points[i].x - points[i-1].x, points[i].y - points[i-1].y);
+        }
+        const distance = Math.hypot(end.x - start.x, end.y - start.y);
+        if (distance > pathLen * 0.85) return 'line'; 
+
+        // 2. Closed Shape Check: If the end is close to the start (within 20% of max dimension)
+        const isClosed = Math.hypot(end.x - start.x, end.y - start.y) < Math.max(width, height) * 0.2;
+        if (!isClosed) return 'line'; // Treat open shapes as lines by default
+
+        // Bounding box perimeter check (good for general shapes)
         const bboxPerimeter = (width + height) * 2;
         const ratio = pathLen / bboxPerimeter;
+        const aspectRatio = width / height;
 
-        if (ratio > 0.85 && ratio < 1.3) return 'square'; 
-        if (ratio > 0.6 && ratio <= 0.85) return 'circle'; 
+        // 3. Circle Check: Path length is larger than perimeter (due to curvature) and near 1:1 aspect ratio
+        if (ratio > 0.6 && ratio <= 0.85 && aspectRatio > 0.8 && aspectRatio < 1.2) return 'circle'; 
+        
+        // 4. Square Check: Path length is close to bounding box perimeter AND aspect ratio is close to 1
+        if (ratio > 0.85 && ratio < 1.3 && aspectRatio > 0.8 && aspectRatio < 1.2) return 'square'; 
 
+        // 5. Triangle Check: Fallback for closed shapes that aren't circles or squares
         return 'triangle'; 
     }
 
@@ -227,9 +368,6 @@ window.addEventListener('load', () => {
             baseSize: 40, // Base pixel size of icon
             pulse: 0
         });
-
-        // We DO NOT add this stroke to rawStrokes, essentially "erasing" the line
-        // and replacing it with the object in the detectedObjects array.
     }
 
     // --- 4. ANIMATION LOOP (The Heart of Visuals) ---
@@ -395,12 +533,38 @@ window.addEventListener('load', () => {
         
         if (currentMode === 'pencil' && currentStroke.x.length > 0) {
             analyzeAndPlay(currentStroke); // This converts it to an object
-            // We do NOT push to rawStrokes here if analyzed successfully
-            // If you wanted to keep unrecognized shapes as lines, you'd add logic here.
-            // For now, we assume everything transforms.
+            saveState(); // Save the new state after drawing
             currentStroke = { x: [], y: [], color: currentColor };
         }
     });
+
+    // Undo Button
+    undoBtn.addEventListener('click', () => {
+        if (history.length > 1) {
+            // Move the current state to the redo stack
+            const currentState = history.pop();
+            redoStack.push(currentState);
+            
+            // Load the previous state (which is now the last item in history)
+            const prevState = history[history.length - 1];
+            loadState(prevState);
+            statusMsg.innerText = "Undo successful.";
+        }
+    });
+
+    // Redo Button
+    redoBtn.addEventListener('click', () => {
+        if (redoStack.length > 0) {
+            // Move the state from redo stack back to history
+            const nextState = redoStack.pop();
+            history.push(nextState);
+            
+            // Load the state
+            loadState(nextState);
+            statusMsg.innerText = "Redo successful.";
+        }
+    });
+
 
     // Clear Button
     clearBtn.addEventListener('click', () => {
@@ -408,6 +572,9 @@ window.addEventListener('load', () => {
         rawStrokes = [];
         activeBeats = { kick: false, snare: false, hihat: false }; 
         updateBeatStatus();
+        history = []; // Reset history
+        redoStack = []; // Reset redo
+        saveState(); // Save the new clean state
         statusMsg.innerText = "System Wipe Complete";
     });
 
@@ -415,6 +582,26 @@ window.addEventListener('load', () => {
     stopBeatsBtn.addEventListener('click', () => {
         activeBeats = { kick: false, snare: false, hihat: false };
         updateBeatStatus();
+    });
+    
+    // Share Button
+    shareBtn.addEventListener('click', async () => {
+        try {
+            shareBtn.disabled = true;
+            const result = await saveArrangement();
+            if (result.success) {
+                const shareLink = `synth.app/s/${result.shareId}`;
+                statusMsg.innerText = `Arrangement Saved! Share Link: ${shareLink}`;
+                aiStatus.innerText = "SHARE SUCCESS";
+            } else {
+                throw new Error("Server failed to save the arrangement.");
+            }
+        } catch (error) {
+            statusMsg.innerText = `Save Error: ${error.message}`;
+            aiStatus.innerText = "SAVE FAILED";
+        } finally {
+            shareBtn.disabled = false;
+        }
     });
 
     // Color Selection
@@ -470,4 +657,17 @@ window.addEventListener('load', () => {
     
     pencilBtn.addEventListener('click', () => { currentMode = 'pencil'; pencilBtn.classList.add('active'); eraserBtn.classList.remove('active'); });
     eraserBtn.addEventListener('click', () => { currentMode = 'eraser'; eraserBtn.classList.add('active'); pencilBtn.classList.remove('active'); });
+
+    // --- INITIAL LOAD CHECK ---
+    // NEW CODE (Replace the old initial load check)
+    const urlParams = new URLSearchParams(window.location.search);
+    const shareId = urlParams.get('share');
+
+    if (shareId) {
+        loadArrangement(shareId);
+    } else {
+        // Check for the old path structure as a fallback if necessary
+        // Or just proceed with saveState()
+        saveState(); 
+    }
 });
