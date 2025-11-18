@@ -51,19 +51,19 @@ def create_lstm_model():
     return model
 
 # --- 3. EXECUTION ---
-if __name__ == '__main__':
-    print("1. Generating synthetic dataset...")
-    X, Y = generate_synthetic_data(num_samples_per_class=NUM_SAMPLES)
+# if __name__ == '__main__':
+#     print("1. Generating synthetic dataset...")
+#     X, Y = generate_synthetic_data(num_samples_per_class=NUM_SAMPLES)
     
-    X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=0.2, random_state=42)
+#     X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=0.2, random_state=42)
 
-    print("2. Defining and compiling LSTM model...")
-    model = create_lstm_model()
+#     print("2. Defining and compiling LSTM model...")
+#     model = create_lstm_model()
     
-    print("3. Starting model training (This may take a minute)...")
-    model.fit(X_train, Y_train, epochs=30, batch_size=32, validation_data=(X_val, Y_val), verbose=1)
+#     print("3. Starting model training (This may take a minute)...")
+#     model.fit(X_train, Y_train, epochs=30, batch_size=32, validation_data=(X_val, Y_val), verbose=1)
     
-    print(f"\n4. Saving model as '{MODEL_FILENAME}'...")
-    model.save(MODEL_FILENAME)
+#     print(f"\n4. Saving model as '{MODEL_FILENAME}'...")
+#     model.save(MODEL_FILENAME)
     
-    print(f"\n✅ Training complete! The file '{MODEL_FILENAME}' is ready.")
+#     print(f"\n✅ Training complete! The file '{MODEL_FILENAME}' is ready.")

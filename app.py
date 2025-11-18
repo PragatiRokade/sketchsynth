@@ -101,7 +101,7 @@ def predict_sound():
         return jsonify({"error": f"An unexpected server error occurred: {str(e)}"}), 500
 
 # --- 4. MAIN ENTRY POINT ---
-if __name__ == '__main__':
-    if load_keras_model():
-        print("Starting Flask server on http://127.0.0.1:5000")
-        app.run(debug=True, port=5000)
+# if __name__ == '__main__':
+#     if load_keras_model():
+#         print("Starting Flask server on http://127.0.0.1:5000")
+#         app.run(debug=True, port=5000)
