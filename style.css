@@ -8,7 +8,6 @@
     --border-color: #333;
 }
 
-
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--bg-dark);
@@ -19,15 +18,13 @@ body {
     overflow: hidden;
 }
 
-
 .main-container {
     display: flex;
     height: 100vh;
     width: 100%;
 }
 
-
-/* --- Side Panels (Shared Styles) --- */
+/* --- Side Panels --- */
 .side-panel {
     width: 280px;
     background-color: var(--bg-panel);
@@ -36,30 +33,14 @@ body {
     flex-direction: column;
     gap: 15px;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    z-index: 10; /* Sit above canvas */
-   
+    z-index: 10;
     height: 100%;
-    max-height: 100vh;
     overflow-y: auto;
     box-sizing: border-box;
 }
 
-
-.left-panel {
-    border-right: 1px solid var(--border-color);
-}
-
-
-.right-panel {
-    border-left: 1px solid var(--border-color);
-}
-
-
-/* Scrollbar Styling */
-.side-panel::-webkit-scrollbar { width: 6px; }
-.side-panel::-webkit-scrollbar-track { background: var(--bg-panel); }
-.side-panel::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-
+.left-panel { border-right: 1px solid var(--border-color); }
+.right-panel { border-left: 1px solid var(--border-color); }
 
 .neon-text {
     color: #fff;
@@ -71,7 +52,6 @@ body {
     flex-shrink: 0;
 }
 
-
 .control-group {
     background-color: var(--bg-element);
     border: 1px solid var(--border-color);
@@ -79,7 +59,6 @@ body {
     padding: 15px;
     flex-shrink: 0;
 }
-
 
 .control-group h3 {
     color: var(--neon-blue);
@@ -93,10 +72,8 @@ body {
     margin-bottom: 10px;
 }
 
-
 /* --- Buttons --- */
 .btn-row { display: flex; gap: 10px; }
-
 
 .tool-btn, .action-btn {
     width: 100%;
@@ -115,16 +92,13 @@ body {
     font-size: 0.9rem;
 }
 
-
 .tool-btn.half { width: 50%; justify-content: center; }
-
 
 .tool-btn:hover {
     background: #333;
     border-color: var(--neon-blue);
     box-shadow: 0 0 4px var(--neon-blue);
 }
-
 
 .tool-btn.active {
     background: var(--neon-blue);
@@ -134,13 +108,11 @@ body {
     border-color: var(--neon-blue);
 }
 
-
 .action-btn:hover {
     background: #300;
     border-color: var(--neon-pink);
     box-shadow: 0 0 4px var(--neon-pink);
 }
-
 
 /* --- Palette --- */
 .color-palette {
@@ -149,7 +121,6 @@ body {
     gap: 10px;
     justify-content: center;
 }
-
 
 .color-swatch {
     width: 30px;
@@ -163,8 +134,6 @@ body {
 .color-swatch:hover { transform: scale(1.1); }
 .color-swatch.active { border: 2px solid white; transform: scale(1.15); }
 
-
-/* --- Sliders --- */
 input[type="range"] {
     width: 100%;
     accent-color: var(--neon-blue);
@@ -174,7 +143,6 @@ input[type="range"] {
     outline: none;
 }
 
-
 /* --- Canvas Area --- */
 .canvas-container {
     flex: 1;
@@ -183,40 +151,56 @@ input[type="range"] {
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
+    /* CRITICAL FIX: REMOVED OVERFLOW HIDDEN SO GLOW CAN BE SEEN */
 }
-
 
 canvas {
     background-color: #000;
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.05);
-    border: 1px solid #333;
+    border: 2px solid #333;
     cursor: crosshair;
-    transition: box-shadow 0.05s; /* Smooth pulse */
+    /* Allows transition for smooth pulsing */
+    transition: box-shadow 0.05s, border-color 0.05s; 
 }
 
-
-/* --- VISUALIZER PULSE ANIMATION --- */
+/* --- VISUALIZER ANIMATIONS --- */
 @keyframes pulse-kick {
     0% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.05); border-color: #333; }
-    30% { box-shadow: 0 0 50px rgba(255, 255, 255, 0.8); border-color: #FFF; } /* White Flash */
+    20% { box-shadow: 0 0 80px rgba(255, 255, 255, 0.9); border-color: #FFF; } /* BRIGHT FLASH */
     100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.05); border-color: #333; }
 }
-
 
 @keyframes pulse-snare {
     0% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.05); border-color: #333; }
-    30% { box-shadow: 0 0 40px rgba(0, 255, 255, 0.8); border-color: #0FF; } /* Cyan Flash */
+    20% { box-shadow: 0 0 60px rgba(0, 255, 255, 0.8); border-color: #0FF; } /* CYAN FLASH */
     100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.05); border-color: #333; }
 }
-
 
 .pulse-kick {
     animation: pulse-kick 0.15s ease-out;
 }
 
-
 .pulse-snare {
     animation: pulse-snare 0.1s ease-out;
 }
 
+/* Recording State */
+.recording {
+    background-color: #300 !important;
+    border-color: red !important;
+    box-shadow: 0 0 10px red !important;
+    color: white !important;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; }
+}
+
+.status-text {
+    color: #666;
+    font-size: 0.8rem;
+    text-align: center;
+    margin-top: auto;
+    padding-top: 10px;
+}
