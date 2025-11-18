@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SketchSynth: AI Studio</title>
+    <title>SketchSynth: Studio Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 </head>
 <body>
     <div class="main-container">
-        
+       
         <div class="side-panel left-panel">
             <h2 class="neon-text">Sketch</h2>
-            
+           
             <div class="control-group">
                 <h3><i class="fa-solid fa-tools"></i> Tools</h3>
                 <button id="pencilBtn" class="tool-btn active"><i class="fa-solid fa-pencil"></i> Neon Pen</button>
                 <button id="eraserBtn" class="tool-btn"><i class="fa-solid fa-eraser"></i> Eraser</button>
             </div>
-            
+           
             <div class="control-group">
                 <h3><i class="fa-solid fa-palette"></i> Neon Ink</h3>
                 <div class="color-palette">
@@ -27,66 +28,74 @@
                     <div class="color-swatch" data-color="#00FFFF" style="background-color: #00FFFF;"></div>
                     <div class="color-swatch" data-color="#39FF14" style="background-color: #39FF14;"></div>
                     <div class="color-swatch" data-color="#FF0099" style="background-color: #FF0099;"></div>
-                    <div class="color-swatch" data-color="#FFFF00" style="background-color: #FFFF00;"></div>
-                    <div class="color-swatch" data-color="#9D00FF" style="background-color: #9D00FF;"></div>
-                    <div class="color-swatch" data-color="#FF4500" style="background-color: #FF4500;"></div>
+                    <div class="color-swatch" data-color="#BC13FE" style="background-color: #BC13FE;"></div>
+                    <div class="color-swatch" data-color="#FFE302" style="background-color: #FFE302;"></div>
                 </div>
             </div>
+
 
             <div class="control-group">
                 <h3><i class="fa-solid fa-sliders"></i> Brush Size</h3>
                 <input type="range" id="brushSize" min="1" max="30" value="3">
             </div>
 
+
              <div class="control-group">
                 <h3><i class="fa-solid fa-rotate-left"></i> History</h3>
                 <div class="btn-row">
-                    <button id="undoBtn" class="tool-btn half"><i class="fa-solid fa-undo"></i> Undo</button>
-                    <!-- <button id="redoBtn" class="tool-btn half"><i class="fa-solid fa-redo"></i> Redo</button> -->
+                    <button id="undoBtn" class="tool-btn half" disabled><i class="fa-solid fa-undo"></i> Undo</button>
+                    <button id="redoBtn" class="tool-btn half" disabled><i class="fa-solid fa-redo"></i> Redo</button>
                 </div>
             </div>
-
-            <div id="statusMessage" class="status-text">System Ready</div>
         </div>
-        
+       
         <div class="canvas-container" id="canvasContainer">
             <canvas id="drawingCanvas"></canvas>
         </div>
 
+
         <div class="side-panel right-panel">
             <h2 class="neon-text">Synth</h2>
 
+
             <div class="control-group">
                 <h3><i class="fa-solid fa-robot"></i> AI Status</h3>
-                <div id="aiStatus" class="status-text" style="color: #FF0099; font-weight: bold;">Loading...</div>
+                <div id="aiStatus" class="status-text" style="color: #FF0099; font-weight: bold;">System Ready</div>
                 <div id="beatStatus" class="status-text" style="margin-top: 5px; font-size: 0.7rem;">No Beats Active</div>
             </div>
+
 
             <div class="control-group">
                 <h3><i class="fa-solid fa-music"></i> Audio Mixer</h3>
                 <label for="bpmSlider" style="font-size: 0.8rem; color: #aaa;">Tempo: <span id="bpmLabel" style="color: #fff;">120</span> BPM</label>
                 <input type="range" id="bpmSlider" min="60" max="240" value="120">
-                
+               
                 <div style="margin-top: 15px; display: flex; align-items: center; gap: 10px;">
                     <input type="checkbox" id="echoToggle" style="width: 20px; height: 20px; accent-color: #00FFFF;">
                     <label for="echoToggle" style="color: #00FFFF; font-weight: bold; cursor: pointer;">Cyber Echo</label>
                 </div>
             </div>
 
+
             <div class="control-group">
                 <h3><i class="fa-solid fa-microphone"></i> Studio</h3>
                 <div class="btn-row">
                     <button id="recordBtn" class="tool-btn" style="color: #ff4444; border-color: #ff4444;"><i class="fa-solid fa-circle"></i> Rec</button>
-                    <button id="downloadBtn" class="tool-btn" disabled><i class="fa-solid fa-download"></i> Save</button>
+                    <button id="shareBtn" class="tool-btn"><i class="fa-solid fa-share-nodes"></i> Share</button>
                 </div>
-                <button id="shareBtn" class="tool-btn" style="margin-top: 10px;"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                 <div class="btn-row" style="margin-top: 10px;">
+                    <button id="downloadBtn" class="tool-btn" disabled><i class="fa-solid fa-download"></i> Save Audio</button>
+                </div>
             </div>
+
 
             <div class="control-group">
                 <h3><i class="fa-solid fa-bolt"></i> Actions</h3>
                 <button id="stopBeatsBtn" class="action-btn" style="margin-bottom: 10px; border-color: #00FFFF; color:#00FFFF;"><i class="fa-solid fa-stop"></i> Stop Beats</button>
                 <button id="clearBtn" class="action-btn"><i class="fa-solid fa-trash"></i> Wipe System</button>
             </div>
+           
+            <div id="statusMessage" class="status-text">System Ready</div>
         </div>
     </div>
     <script src="sketch.js"></script>
